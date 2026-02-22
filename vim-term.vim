@@ -37,13 +37,12 @@ function! _FileCompletion(A, L, P) abort
     return completions
 endfunction
 
-" Issue: when the terminal buffer text becomes longer than the height,
-" the clear command will not clear the scrollback buffer and text will
-" come from the top of the screen instead of the top of the buffer
-
 function! s:Cmd(cmd) abort
     let cmd = !empty(a:cmd) ? a:cmd : input(s:input_text, '', 'customlist,_FileCompletion')
     if empty(cmd)
+        return
+    endif
+    if cmd == ' '
         if empty(s:last_cmd)
             return
         else
@@ -57,7 +56,7 @@ function! s:Cmd(cmd) abort
     if s:bufnr == -1
         belowright split
         call s:CustomTerminal()
-        call chansend(b:terminal_job_id, "clear\e[3J" . "\n")
+        call chansend(b:terminal_job_id, " clear" . "\n")
         execute 'file ' . s:buf_name
         let s:bufnr = bufnr(s:buf_name)
     else
@@ -70,7 +69,11 @@ function! s:Cmd(cmd) abort
             execute s:bufwinnr . 'wincmd w'
         endif
 
-        call chansend(b:terminal_job_id, "clear\e[3J" . "\n")
+        call chansend(b:terminal_job_id, " clear" . "\n")
+        let sb = &scrollback
+        let &scrollback = 1
+        sleep 100m
+        let &scrollback = sb
     endif
 
     let term_cmd = escape(s:term_cmd . '(' . cmd . ')', '%#')
